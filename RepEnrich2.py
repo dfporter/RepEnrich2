@@ -34,7 +34,7 @@ unique_mapper_bam = args.alignment_bam
 fastqfile_1 = args.fastqfile
 fastqfile_2 = args.fastqfile2
 cpus = args.cpus
-b_opt = "-k 1 -p " +str(1) +" --quiet"
+b_opt = "-k 1 -p 1 --quiet"
 simple_repeat = args.collapserepeat
 paired_end = args.pairedend
 allcountmethod = args.allcountmethod
@@ -205,24 +205,46 @@ if paired_end == 'TRUE':
     psb = []
     ticker = 0
 
-    for metagenome in repeat_list:
+    print(f"Length of repeat_list: {len(repeat_list)}.")
+
+    for n_genome, metagenome in enumerate(repeat_list):
+        print(metagenome)
 
         metagenomepath = setup_folder + os.path.sep + metagenome
+        print(metagenomepath)
+
         file1 = folder_pair1 + os.path.sep + metagenome + '.txt'
         file2 = folder_pair2 + os.path.sep + metagenome + '.txt'
 
         with open(file1, 'w') as stdout:
-            p = subprocess.Popen('bowtie2 ' + b_opt + ' ' + '-x ' + metagenomepath + ' ' + fastqfile_1 + ' | grep \"repname\" -', shell=True, stdout=stdout)
+            print("stdout: ", file1)
+            cmd = 'bowtie2 ' + b_opt + ' ' + '-x ' + metagenomepath + ' ' + fastqfile_1 + ' | grep \"repname\" -'
+            #cmd = ['bowtie2', '-k', '1', '-p', '1', '--quiet', '-x', metagenomepath, fastqfile_1, '|', 'grep', '\"repname\"', '-']
+            print(cmd)
+            #p = subprocess.check_output(cmd)#, shell=True, stdout=stdout)
+            #out = p.decode('utf-8')
+            #stdout.write(out)
+            p = subprocess.Popen(cmd, shell=True, stdout=stdout)
             
         with open(file2, 'w') as stdout:
-            pp = subprocess.Popen('bowtie2 ' + b_opt + ' ' + '-x ' + metagenomepath + ' ' + fastqfile_2 + ' | grep \"repname\" -', shell=True, stdout=stdout)
+            print("stdout: ", file2)
+            cmd = 'bowtie2 ' + b_opt + ' ' + '-x ' + metagenomepath + ' ' + fastqfile_2 + ' | grep \"repname\" -'
+            #cmd = ['bowtie2', '-k', '1', '-p', '1', '--quiet', '-x', metagenomepath, fastqfile_1, '|', 'grep', '\"repname\"', '-']
+            print(cmd)
+            #pp = subprocess.check_output(cmd)#, shell=True, stdout=stdout)
+            #out = p.decode('utf-8')
+            #stdout.write(out)
+            pp = subprocess.Popen(cmd, shell=True, stdout=stdout)
 
+        print(f"cpu ticker: {ticker}/{cpus}. Progress {n_genome+1}/{len(repeat_list)}.")
+
+        #skip = """
         ps.append(p)
         ticker +=1
         psb.append(pp)
         ticker +=1
 
-        if ticker == cpus:
+        if ticker >= cpus:
             for p in ps:
                 p.communicate()
             for p in psb:
@@ -230,11 +252,12 @@ if paired_end == 'TRUE':
             ticker = 0
             psb =[]
             ps = []
-
+        
     if len(ps) > 0:
         for p in ps:
             p.communicate()
-
+        
+    #"""
     stdout.close()
     
 ################################################################################
@@ -272,7 +295,7 @@ if paired_end == 'FALSE':
             p = subprocess.Popen('bowtie2 ' + b_opt + ' ' + '-x ' + metagenomepath + ' ' + fastqfile_1 + ' | grep \"repname\" -', shell=True, stdout=stdout)
         ps.append(p)
         ticker +=1
-        if ticker == cpus:
+        if ticker >= cpus:
             for p in ps:
                 p.communicate()
             ticker = 0
@@ -426,6 +449,7 @@ else:
     
 ################################################################################
 # Remove Large intermediate files
+keep_these = """
 if os.path.exists(outputfolder + os.path.sep + outputfile_prefix + '_regionsorter.txt'):
     os.remove(outputfolder + os.path.sep + outputfile_prefix + '_regionsorter.txt')
 if os.path.exists(outputfolder + os.path.sep + 'pair1_'):
@@ -434,5 +458,5 @@ if os.path.exists(outputfolder + os.path.sep + 'pair2_'):
     shutil.rmtree(outputfolder + os.path.sep + 'pair2_')
 if os.path.exists(outputfolder + os.path.sep + 'sorted_'):
     shutil.rmtree(outputfolder + os.path.sep + 'sorted_')
-
+"""
 print("... Done")
