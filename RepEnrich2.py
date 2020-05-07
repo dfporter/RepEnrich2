@@ -21,7 +21,7 @@ def run(args):
     fastqfile_1 = args.fastqfile
     fastqfile_2 = args.fastqfile2
     cpus = args.cpus
-    b_opt = "-k 1 -p 1 --quiet"
+    b_opt = args.b_opt  #"-k 1 -p 1 --quiet"
     simple_repeat = args.collapserepeat
     paired_end = args.pairedend
     allcountmethod = args.allcountmethod
