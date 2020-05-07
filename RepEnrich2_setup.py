@@ -50,7 +50,7 @@ def import_text(filename, separator):
             yield line
 # Make a setup folder
 if not os.path.exists(setup_folder):
-	os.makedirs(setup_folder)
+    os.makedirs(setup_folder)
 
 ################################################################################
 # load genome into dictionary
@@ -74,61 +74,61 @@ del g
 ################################################################################
 # Build a bedfile of repeatcoordinates to use by RepEnrich region_sorter
 if is_bed == "FALSE":
-	repeat_elements= []
-	fout = open(os.path.realpath(setup_folder + os.path.sep + 'repnames.bed'), 'w')
-	fin = import_text(annotation_file, ' ')
-	x = 0
-	rep_chr = {}
-	rep_start = {}
-	rep_end = {}
-	x = 0
-	for line in fin:
-	    if x>1:
-	        line9 = line[9].replace("(","_").replace(")","_").replace("/","_")
-	        repname = line9
-		if not repname in repeat_elements:
-			repeat_elements.append(repname)
-	        repchr = line[4]
-	        repstart = int(line[5])
-	        repend = int(line[6])
-		print(str(repchr) + '\t'+str(repstart)+ '\t'+str(repend)+ '\t'+str(repname), file=fout)
-	        if repname in rep_chr:
-	            rep_chr[repname].append(repchr)
-	            rep_start[repname].append(int(repstart))
-	            rep_end[repname].append(int(repend))
-	        else:
-	            rep_chr[repname] = [repchr]
-	            rep_start[repname] = [int(repstart)]
-	            rep_end[repname] = [int(repend)]
-	    x +=1
+    repeat_elements= []
+    fout = open(os.path.realpath(setup_folder + os.path.sep + 'repnames.bed'), 'w')
+    fin = import_text(annotation_file, ' ')
+    x = 0
+    rep_chr = {}
+    rep_start = {}
+    rep_end = {}
+    x = 0
+    for line in fin:
+        if x>1:
+            line9 = line[9].replace("(","_").replace(")","_").replace("/","_")
+            repname = line9
+        if not repname in repeat_elements:
+            repeat_elements.append(repname)
+            repchr = line[4]
+            repstart = int(line[5])
+            repend = int(line[6])
+        print(str(repchr) + '\t'+str(repstart)+ '\t'+str(repend)+ '\t'+str(repname), file=fout)
+            if repname in rep_chr:
+                rep_chr[repname].append(repchr)
+                rep_start[repname].append(int(repstart))
+                rep_end[repname].append(int(repend))
+            else:
+                rep_chr[repname] = [repchr]
+                rep_start[repname] = [int(repstart)]
+                rep_end[repname] = [int(repend)]
+        x +=1
 if is_bed == "TRUE":
-	repeat_elements= []
-	fout = open(os.path.realpath(setup_folder + os.path.sep + 'repnames.bed'), 'w')
-	fin = open(os.path.realpath(annotation_file), 'r')
-	x =0
-	rep_chr = {}
-	rep_start = {}
-	rep_end = {}
-	x =0
-	for line in fin:
-		line=line.strip('\n')
-		line=line.split('\t')
-	        line3 = line[3].replace("(","_").replace(")","_").replace("/","_")
-	        repname = line3
-		if not repname in repeat_elements:
-			repeat_elements.append(repname)
-	        repchr = line[0]
-	        repstart = int(line[1])
-	        repend = int(line[2])
-		print(str(repchr) + '\t'+str(repstart)+ '\t'+str(repend)+ '\t'+str(repname), file=fout)
-	        if repname in rep_chr:
-	            rep_chr[repname].append(repchr)
-	            rep_start[repname].append(int(repstart))
-	            rep_end[repname].append(int(repend))
-	        else:
-	            rep_chr[repname] = [repchr]
-	            rep_start[repname] = [int(repstart)]
-	            rep_end[repname] = [int(repend)]
+    repeat_elements= []
+    fout = open(os.path.realpath(setup_folder + os.path.sep + 'repnames.bed'), 'w')
+    fin = open(os.path.realpath(annotation_file), 'r')
+    x =0
+    rep_chr = {}
+    rep_start = {}
+    rep_end = {}
+    x =0
+    for line in fin:
+        line=line.strip('\n')
+        line=line.split('\t')
+            line3 = line[3].replace("(","_").replace(")","_").replace("/","_")
+            repname = line3
+        if not repname in repeat_elements:
+            repeat_elements.append(repname)
+            repchr = line[0]
+            repstart = int(line[1])
+            repend = int(line[2])
+        print(str(repchr) + '\t'+str(repstart)+ '\t'+str(repend)+ '\t'+str(repname), file=fout)
+            if repname in rep_chr:
+                rep_chr[repname].append(repchr)
+                rep_start[repname].append(int(repstart))
+                rep_end[repname].append(int(repend))
+            else:
+                rep_chr[repname] = [repchr]
+                rep_start[repname] = [int(repstart)]
+                rep_end[repname] = [int(repend)]
 
 fin.close()
 fout.close()
@@ -151,8 +151,8 @@ for i in range(gapl):
 print("Saving number of fragments processed per repname to " + nfragmentsfile1)
 fout1 = open(os.path.realpath(nfragmentsfile1),"w")
 for repname in list(rep_chr.keys()):
-	rep_chr_current = rep_chr[repname]
-	print(str(len(rep_chr[repname])) + "\t" + repname, file=fout1)
+    rep_chr_current = rep_chr[repname]
+    print(str(len(rep_chr[repname])) + "\t" + repname, file=fout1)
 fout1.close()
 
 # generate metagenomes and save them to FASTA files
@@ -176,7 +176,7 @@ for repname in list(rep_chr.keys()):
             print("Unrecognised Chromosome: "+chr)
             pass
     
-	# Convert metagenome to SeqRecord object (required by SeqIO.write)
+    # Convert metagenome to SeqRecord object (required by SeqIO.write)
     record = SeqRecord(Seq(metagenome, IUPAC.unambiguous_dna), id = "repname", name = "", description = "")
     print("saving repgenome " + newname + ".fa" + " (" + str(k) + " of " + str(nrepgenomes) + ")")
     fastafilename = os.path.realpath(setup_folder + os.path.sep + newname + ".fa")
