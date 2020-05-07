@@ -37,7 +37,7 @@ is_bed = args.is_bed
 try:
     subprocess.call(shlex.split("bowtie2 --version"), stdout=open(os.devnull, 'wb'), stderr=open(os.devnull, 'wb'))
 except OSError:
-    print "Error: Bowtie2 or BEDTools not loaded"
+    print("Error: Bowtie2 or BEDTools not loaded")
     raise
 
 ################################################################################
@@ -54,14 +54,14 @@ if not os.path.exists(setup_folder):
 
 ################################################################################
 # load genome into dictionary
-print "loading genome..."
+print("loading genome...")
 g = SeqIO.to_dict(SeqIO.parse(genomefasta, "fasta"))
 
-print "Precomputing length of all chromosomes..."
+print("Precomputing length of all chromosomes...")
 idxgenome = {}
 lgenome = {}
 genome = {}
-allchrs = g.keys()
+allchrs = list(g.keys())
 k = 0
 for chr in allchrs:
     genome[chr] = str(g[chr].seq)
@@ -91,8 +91,8 @@ if is_bed == "FALSE":
 	        repchr = line[4]
 	        repstart = int(line[5])
 	        repend = int(line[6])
-		print >> fout, str(repchr) + '\t'+str(repstart)+ '\t'+str(repend)+ '\t'+str(repname)
-	        if rep_chr.has_key(repname):
+		print(str(repchr) + '\t'+str(repstart)+ '\t'+str(repend)+ '\t'+str(repname), file=fout)
+	        if repname in rep_chr:
 	            rep_chr[repname].append(repchr)
 	            rep_start[repname].append(int(repstart))
 	            rep_end[repname].append(int(repend))
@@ -120,8 +120,8 @@ if is_bed == "TRUE":
 	        repchr = line[0]
 	        repstart = int(line[1])
 	        repend = int(line[2])
-		print >> fout, str(repchr) + '\t'+str(repstart)+ '\t'+str(repend)+ '\t'+str(repname)
-	        if rep_chr.has_key(repname):
+		print(str(repchr) + '\t'+str(repstart)+ '\t'+str(repend)+ '\t'+str(repname), file=fout)
+	        if repname in rep_chr:
 	            rep_chr[repname].append(repchr)
 	            rep_start[repname].append(int(repstart))
 	            rep_end[repname].append(int(repend))
@@ -133,12 +133,12 @@ if is_bed == "TRUE":
 fin.close()
 fout.close()
 repeat_elements = sorted(repeat_elements)
-print "Writing a key for all repeats..."
+print("Writing a key for all repeats...")
 #print to fout the binary key that contains each repeat type with the associated binary number; sort the binary key:
 fout = open(os.path.realpath(setup_folder + os.path.sep + 'repgenomes_key.txt'), 'w')
 x = 0
 for repeat in repeat_elements:
-    print >> fout, str(repeat) + '\t' + str(x)
+    print(str(repeat) + '\t' + str(x), file=fout)
     x +=1
 fout.close()
 ################################################################################
@@ -148,24 +148,24 @@ for i in range(gapl):
     spacer = spacer + "N"
 
 # save file with number of fragments processed per repname
-print "Saving number of fragments processed per repname to " + nfragmentsfile1
+print("Saving number of fragments processed per repname to " + nfragmentsfile1)
 fout1 = open(os.path.realpath(nfragmentsfile1),"w")
-for repname in rep_chr.keys():
+for repname in list(rep_chr.keys()):
 	rep_chr_current = rep_chr[repname]
-	print >>fout1, str(len(rep_chr[repname])) + "\t" + repname
+	print(str(len(rep_chr[repname])) + "\t" + repname, file=fout1)
 fout1.close()
 
 # generate metagenomes and save them to FASTA files
 k = 1
-nrepgenomes = len(rep_chr.keys())
-for repname in rep_chr.keys():
+nrepgenomes = len(list(rep_chr.keys()))
+for repname in list(rep_chr.keys()):
     metagenome = ""
     newname = repname.replace("(","_").replace(")","_").replace("/","_")
-    print "processing repgenome " + newname + ".fa" + " (" + str(k) + " of " + str(nrepgenomes) + ")"
+    print("processing repgenome " + newname + ".fa" + " (" + str(k) + " of " + str(nrepgenomes) + ")")
     rep_chr_current = rep_chr[repname]
     rep_start_current = rep_start[repname]
     rep_end_current = rep_end[repname]
-    print "-------> " + str(len(rep_chr[repname])) + " fragments"
+    print("-------> " + str(len(rep_chr[repname])) + " fragments")
     for i in range(len(rep_chr[repname])):
         try:
             chr = rep_chr_current[i]
@@ -173,15 +173,15 @@ for repname in rep_chr.keys():
             rend = min(rep_end_current[i] + flankingl, lgenome[chr]-1)
             metagenome = metagenome + spacer + genome[chr][rstart:(rend+1)]
         except KeyError:
-            print "Unrecognised Chromosome: "+chr
+            print("Unrecognised Chromosome: "+chr)
             pass
     
 	# Convert metagenome to SeqRecord object (required by SeqIO.write)
     record = SeqRecord(Seq(metagenome, IUPAC.unambiguous_dna), id = "repname", name = "", description = "")
-    print "saving repgenome " + newname + ".fa" + " (" + str(k) + " of " + str(nrepgenomes) + ")"
+    print("saving repgenome " + newname + ".fa" + " (" + str(k) + " of " + str(nrepgenomes) + ")")
     fastafilename = os.path.realpath(setup_folder + os.path.sep + newname + ".fa")
     SeqIO.write(record, fastafilename, "fasta")
-    print "indexing repgenome " + newname + ".fa" + " (" + str(k) + " of " + str(nrepgenomes) + ")"
+    print("indexing repgenome " + newname + ".fa" + " (" + str(k) + " of " + str(nrepgenomes) + ")")
     #perform bowtie2 indexing
     bt2filename = os.path.realpath(setup_folder + os.path.sep + newname)
     command = shlex.split('bowtie2-build -f --threads ' + str(threads) + ' ' + fastafilename + ' ' + bt2filename)
@@ -189,5 +189,5 @@ for repname in rep_chr.keys():
     p = subprocess.Popen(command).communicate()
     k += 1
 
-print "... Done"
+print("... Done")
 
