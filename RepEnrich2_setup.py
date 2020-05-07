@@ -42,12 +42,15 @@ except OSError:
 
 ################################################################################
 # Define a text importer
+
 csv.field_size_limit(sys.maxsize)
+
 def import_text(filename, separator):
     for line in csv.reader(open(os.path.realpath(filename)), delimiter=separator, 
                            skipinitialspace=True):
         if line:
             yield line
+
 # Make a setup folder
 if not os.path.exists(setup_folder):
     os.makedirs(setup_folder)
@@ -61,37 +64,48 @@ print("Precomputing length of all chromosomes...")
 idxgenome = {}
 lgenome = {}
 genome = {}
-allchrs = list(g.keys())
-k = 0
-for chr in allchrs:
+allchrs = list(g.keys())  # List of chromosome names from the genome fasta.
+
+for k, chr in enumerate(allchrs):
+    #  Delete the SeqIO-created object to replace with a regular dict of strings.
     genome[chr] = str(g[chr].seq)
     del g[chr]
+
+    #  Get lengths, and assign a number to each chromosome.
     lgenome[chr] = len(genome[chr])
     idxgenome[chr] = k
-    k = k + 1
+
 del g
 
 ################################################################################
 # Build a bedfile of repeatcoordinates to use by RepEnrich region_sorter
 if is_bed == "FALSE":
+
     repeat_elements= []
     fout = open(os.path.realpath(setup_folder + os.path.sep + 'repnames.bed'), 'w')
     fin = import_text(annotation_file, ' ')
-    x = 0
+
     rep_chr = {}
     rep_start = {}
     rep_end = {}
-    x = 0
+
+    x = 0  # For skipping line one.
+
+    # For each line of the annotation file (e.g., hg38_repeatmasker_clean.txt).
     for line in fin:
+
         if x>1:
             line9 = line[9].replace("(","_").replace(")","_").replace("/","_")
             repname = line9
-        if not repname in repeat_elements:
-            repeat_elements.append(repname)
+            if not repname in repeat_elements:
+                repeat_elements.append(repname)
             repchr = line[4]
             repstart = int(line[5])
             repend = int(line[6])
-        print(str(repchr) + '\t'+str(repstart)+ '\t'+str(repend)+ '\t'+str(repname), file=fout)
+
+            # Write to the output bed file.
+            print(str(repchr) + '\t'+str(repstart)+ '\t'+str(repend)+ '\t'+str(repname), file=fout)
+
             if repname in rep_chr:
                 rep_chr[repname].append(repchr)
                 rep_start[repname].append(int(repstart))
@@ -101,63 +115,77 @@ if is_bed == "FALSE":
                 rep_start[repname] = [int(repstart)]
                 rep_end[repname] = [int(repend)]
         x +=1
+
 if is_bed == "TRUE":
+
     repeat_elements= []
+
     fout = open(os.path.realpath(setup_folder + os.path.sep + 'repnames.bed'), 'w')
     fin = open(os.path.realpath(annotation_file), 'r')
-    x =0
+
     rep_chr = {}
     rep_start = {}
     rep_end = {}
-    x =0
+    x = 0
+
+    # For each line of the annotation file (e.g., hg38_repeatmasker_clean.txt).
     for line in fin:
-        line=line.strip('\n')
-        line=line.split('\t')
-            line3 = line[3].replace("(","_").replace(")","_").replace("/","_")
-            repname = line3
+
+        line=line.strip('\n').split('\t')
+        line3 = line[3].replace("(","_").replace(")","_").replace("/","_")
+
+        repname = line3
+        
         if not repname in repeat_elements:
             repeat_elements.append(repname)
-            repchr = line[0]
-            repstart = int(line[1])
-            repend = int(line[2])
+        repchr = line[0]
+        repstart = int(line[1])
+        repend = int(line[2])
+
+        # Write to the output bed file.
         print(str(repchr) + '\t'+str(repstart)+ '\t'+str(repend)+ '\t'+str(repname), file=fout)
-            if repname in rep_chr:
-                rep_chr[repname].append(repchr)
-                rep_start[repname].append(int(repstart))
-                rep_end[repname].append(int(repend))
-            else:
-                rep_chr[repname] = [repchr]
-                rep_start[repname] = [int(repstart)]
-                rep_end[repname] = [int(repend)]
+        
+        if repname in rep_chr:
+            rep_chr[repname].append(repchr)
+            rep_start[repname].append(int(repstart))
+            rep_end[repname].append(int(repend))
+        else:
+            rep_chr[repname] = [repchr]
+            rep_start[repname] = [int(repstart)]
+            rep_end[repname] = [int(repend)]
 
 fin.close()
 fout.close()
 repeat_elements = sorted(repeat_elements)
 print("Writing a key for all repeats...")
 #print to fout the binary key that contains each repeat type with the associated binary number; sort the binary key:
+
 fout = open(os.path.realpath(setup_folder + os.path.sep + 'repgenomes_key.txt'), 'w')
-x = 0
-for repeat in repeat_elements:
+
+for x, repeat in enumerate(repeat_elements):
     print(str(repeat) + '\t' + str(x), file=fout)
-    x +=1
+
 fout.close()
+
 ################################################################################
-# generate spacer for psuedogenomes
+# Generate spacer for psuedogenomes
 spacer = ""
 for i in range(gapl):
     spacer = spacer + "N"
 
-# save file with number of fragments processed per repname
+# Save file with number of fragments processed per repname
 print("Saving number of fragments processed per repname to " + nfragmentsfile1)
-fout1 = open(os.path.realpath(nfragmentsfile1),"w")
+fout1 = open(os.path.realpath(nfragmentsfile1), "w")
 for repname in list(rep_chr.keys()):
     rep_chr_current = rep_chr[repname]
     print(str(len(rep_chr[repname])) + "\t" + repname, file=fout1)
+
 fout1.close()
 
 # generate metagenomes and save them to FASTA files
 k = 1
 nrepgenomes = len(list(rep_chr.keys()))
+
 for repname in list(rep_chr.keys()):
     metagenome = ""
     newname = repname.replace("(","_").replace(")","_").replace("/","_")
@@ -173,7 +201,7 @@ for repname in list(rep_chr.keys()):
             rend = min(rep_end_current[i] + flankingl, lgenome[chr]-1)
             metagenome = metagenome + spacer + genome[chr][rstart:(rend+1)]
         except KeyError:
-            print("Unrecognised Chromosome: "+chr)
+            print("Unrecognised Chromosome: " + chr)
             pass
     
     # Convert metagenome to SeqRecord object (required by SeqIO.write)
