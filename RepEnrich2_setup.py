@@ -169,9 +169,7 @@ fout.close()
 
 ################################################################################
 # Generate spacer for psuedogenomes
-spacer = ""
-for i in range(gapl):
-    spacer = spacer + "N"
+spacer = "N" * gapl
 
 # Save file with number of fragments processed per repname
 print("Saving number of fragments processed per repname to " + nfragmentsfile1)
@@ -194,16 +192,24 @@ for repname in list(rep_chr.keys()):
     rep_start_current = rep_start[repname]
     rep_end_current = rep_end[repname]
     print("-------> " + str(len(rep_chr[repname])) + " fragments")
-    for i in range(len(rep_chr[repname])):
-        try:
-            chr = rep_chr_current[i]
-            rstart = max(rep_start_current[i] - flankingl, 0)
-            rend = min(rep_end_current[i] + flankingl, lgenome[chr]-1)
-            metagenome = metagenome + spacer + genome[chr][rstart:(rend+1)]
-        except KeyError:
-            print("Unrecognised Chromosome: " + chr)
-            pass
-    
+
+    # DP: I'm editing this so that it isn't repeatedly concatenating a huge string,
+    # and instead just writes to a file, which is then read back in.
+    with open('temp.fa', 'w') as tempfh:
+        for i in range(len(rep_chr[repname])):
+            try:
+                chr = rep_chr_current[i]
+                rstart = max(rep_start_current[i] - flankingl, 0)
+                rend = min(rep_end_current[i] + flankingl, lgenome[chr]-1)
+                tempfh.write(spacer + genome[chr][rstart:(rend+1)])
+                #metagenome = metagenome + spacer + genome[chr][rstart:(rend+1)]
+            except KeyError:
+                print("Unrecognised Chromosome: " + chr)
+                pass
+
+    with open('temp.fa', 'r') as tempfh:
+        metagenome = tempfh.read()
+
     # Convert metagenome to SeqRecord object (required by SeqIO.write)
     record = SeqRecord(Seq(metagenome, IUPAC.unambiguous_dna), id = "repname", name = "", description = "")
     print("saving repgenome " + newname + ".fa" + " (" + str(k) + " of " + str(nrepgenomes) + ")")
